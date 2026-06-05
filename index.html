@@ -23,7 +23,7 @@
     <section id="transferPage" class="page-panel active">
       <section class="overview">
         <div class="metric-card"><span>当前钱包</span><strong id="metricWallet">未验证</strong></div>
-        <div class="metric-card"><span>Token 状态</span><strong id="metricToken">未读取</strong></div>
+        <div class="metric-card"><span>资产状态</span><strong id="metricToken">未读取</strong></div>
         <div class="metric-card"><span>计划笔数</span><strong id="metricCount">0</strong></div>
         <div class="metric-card"><span>执行状态</span><strong id="metricStatus">待配置</strong></div>
       </section>
@@ -36,8 +36,12 @@
           <div class="result-box" id="walletInfo"><div class="muted">验证后显示钱包地址、链 ID、原生币余额。</div></div>
         </section>
         <section class="card">
-          <div class="card-title"><div><h2>Token 与转账规则</h2><p>读取 ERC20 信息，选择固定转账或随机区间转账。</p></div><span>Step 02</span></div>
-          <label class="field"><span>转账 Token 合约地址</span><input id="tokenAddress" placeholder="0x..." /></label>
+          <div class="card-title"><div><h2>资产与转账规则</h2><p>支持原生币或 ERC20/BEP20 Token，选择固定转账或随机区间转账。</p></div><span>Step 02</span></div>
+          <div class="field"><span>转账资产</span><div class="mode-tabs">
+            <label class="mode-tab" id="nativeAssetTab"><input type="radio" name="transferAssetType" value="native" /><div><strong>原生币</strong><small>BNB / ETH 等手续费币</small></div></label>
+            <label class="mode-tab active" id="tokenAssetTab"><input type="radio" name="transferAssetType" value="token" checked /><div><strong>Token</strong><small>ERC20 / BEP20 合约资产</small></div></label>
+          </div></div>
+          <label class="field" id="tokenAddressPanel"><span>转账 Token 合约地址</span><input id="tokenAddress" placeholder="0x..." /></label>
           <div class="field"><span>转账模式</span><div class="mode-tabs">
             <label class="mode-tab active" id="randomModeTab"><input type="radio" name="transferMode" value="random" checked /><div><strong>随机转账</strong><small>每个地址随机一个数量</small></div></label>
             <label class="mode-tab" id="fixedModeTab"><input type="radio" name="transferMode" value="fixed" /><div><strong>固定转账</strong><small>每个地址转同样数量</small></div></label>
@@ -46,7 +50,7 @@
           <div id="fixedAmountPanel" class="hidden"><label class="field"><span>固定转账数量</span><input id="fixedAmount" type="number" min="0" step="0.000000000000000001" placeholder="例如：1" /></label></div>
           <div class="grid-2"><label class="field"><span>每笔间隔秒数</span><input id="delaySeconds" type="number" min="0" step="0.1" value="1.2" /></label><label class="field"><span>随机小数位</span><input id="randomDecimals" type="number" min="0" max="18" step="1" value="6" /></label></div>
           <div class="actions"><button id="loadTokenBtn" type="button">读取 Token 信息</button></div>
-          <div class="result-box" id="tokenInfo"><div class="muted">读取后显示 Token 名称、符号、精度、发送钱包余额。</div></div>
+          <div class="result-box" id="tokenInfo"><div class="muted">读取后显示资产名称、符号、精度、发送钱包余额。</div></div>
         </section>
         <section class="card wide">
           <div class="card-title"><div><h2>接收钱包列表</h2><p>一行一个接收地址，生成预览后才允许执行。</p></div><span>Step 03</span></div>
