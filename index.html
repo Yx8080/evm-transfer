@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /><title>EVM 批量转账平台</title><link rel="stylesheet" href="./styles.css" /></head>
+<body>
+<div id="app" class="platform">
+  <aside class="sidebar">
+    <div class="brand"><div class="brand-logo">E</div><div><div class="brand-name">EVM Transfer</div><div class="brand-subtitle">Batch Console</div></div></div>
+    <nav class="menu">
+      <a class="menu-item active" data-page="transfer" href="javascript:void(0)"><span class="menu-icon">↗</span><span>批量转账</span></a>
+      <a class="menu-item" data-page="wallet" href="javascript:void(0)"><span class="menu-icon">◎</span><span>钱包生成</span></a>
+      <a class="menu-item" data-page="trade" href="javascript:void(0)"><span class="menu-icon">⇄</span><span>一键买卖</span></a>
+      <a class="menu-item" data-page="collect" href="javascript:void(0)"><span class="menu-icon">⇥</span><span>一键归集</span></a>
+    </nav>
+    <div class="sidebar-card"><div class="sidebar-card-title">安全模式</div><div class="sidebar-card-text">本地浏览器执行，不上传私钥，不写入本地存储。</div></div>
+  </aside>
+
+  <section class="main">
+    <header class="topbar">
+      <div><div class="breadcrumb" id="breadcrumbText">工具 / EVM / 批量转账</div><h1 id="pageTitle">EVM 批量转账</h1></div>
+      <div class="topbar-right"><div class="status-pill" id="networkStatus">未连接</div></div>
+    </header>
+
+    <section id="transferPage" class="page-panel active">
+      <section class="overview">
+        <div class="metric-card"><span>当前钱包</span><strong id="metricWallet">未验证</strong></div>
+        <div class="metric-card"><span>Token 状态</span><strong id="metricToken">未读取</strong></div>
+        <div class="metric-card"><span>计划笔数</span><strong id="metricCount">0</strong></div>
+        <div class="metric-card"><span>执行状态</span><strong id="metricStatus">待配置</strong></div>
+      </section>
+      <main class="layout">
+        <section class="card">
+          <div class="card-title"><div><h2>基础配置</h2><p>配置 RPC、私钥，并校验当前发送钱包。</p></div><span>Step 01</span></div>
+          <label class="field"><span>RPC URL</span><input id="rpcUrl" placeholder="例如：https://bsc-dataseed.binance.org/" /></label>
+          <label class="field"><span>发送钱包私钥</span><div class="inline"><input id="privateKey" type="password" placeholder="0x 开头或不带 0x 的私钥" /><button id="togglePkBtn" class="secondary small" type="button">显示</button></div></label>
+          <div class="actions"><button id="validateWalletBtn" type="button">验证钱包私钥</button><button id="clearPrivateKeyBtn" class="ghost" type="button">清空私钥</button></div>
+          <div class="result-box" id="walletInfo"><div class="muted">验证后显示钱包地址、链 ID、原生币余额。</div></div>
+        </section>
+        <section class="card">
+          <div class="card-title"><div><h2>Token 与转账规则</h2><p>读取 ERC20 信息，选择固定转账或随机区间转账。</p></div><span>Step 02</span></div>
+          <label class="field"><span>转账 Token 合约地址</span><input id="tokenAddress" placeholder="0x..." /></label>
+          <div class="field"><span>转账模式</span><div class="mode-tabs">
+            <label class="mode-tab active" id="randomModeTab"><input type="radio" name="transferMode" value="random" checked /><div><strong>随机转账</strong><small>每个地址随机一个数量</small></div></label>
+            <label class="mode-tab" id="fixedModeTab"><input type="radio" name="transferMode" value="fixed" /><div><strong>固定转账</strong><small>每个地址转同样数量</small></div></label>
+          </div></div>
+          <div id="randomAmountPanel"><div class="field"><span>随机区间</span><div class="range-row"><input id="minAmount" type="number" min="0" step="0.000000000000000001" placeholder="最小数量，例如：0.1" /><div class="range-separator">至</div><input id="maxAmount" type="number" min="0" step="0.000000000000000001" placeholder="最大数量，例如：1.5" /></div></div></div>
+          <div id="fixedAmountPanel" class="hidden"><label class="field"><span>固定转账数量</span><input id="fixedAmount" type="number" min="0" step="0.000000000000000001" placeholder="例如：1" /></label></div>
+          <div class="grid-2"><label class="field"><span>每笔间隔秒数</span><input id="delaySeconds" type="number" min="0" step="0.1" value="1.2" /></label><label class="field"><span>随机小数位</span><input id="randomDecimals" type="number" min="0" max="18" step="1" value="6" /></label></div>
+          <div class="actions"><button id="loadTokenBtn" type="button">读取 Token 信息</button></div>
+          <div class="result-box" id="tokenInfo"><div class="muted">读取后显示 Token 名称、符号、精度、发送钱包余额。</div></div>
+        </section>
+        <section class="card wide">
+          <div class="card-title"><div><h2>接收钱包列表</h2><p>一行一个接收地址，生成预览后才允许执行。</p></div><span>Step 03</span></div>
+          <label class="field"><span>接收地址</span><textarea id="recipients" rows="10" placeholder="0x1111111111111111111111111111111111111111&#10;0x2222222222222222222222222222222222222222"></textarea></label>
+          <div class="actions split-actions"><div><button id="previewBtn" type="button">生成转账预览</button><button id="executeBtn" class="danger" type="button" disabled>执行批量转账</button><button id="stopBtn" class="secondary" type="button" disabled>停止</button></div><div class="summary-chip" id="summaryText">暂无计划</div></div>
+          <div class="warning"><strong>安全提醒：</strong>本页面不会上传私钥，但浏览器环境仍有风险。建议使用临时钱包、小额资金、测试网先验证。</div>
+        </section>
+        <section class="card wide"><div class="card-title"><div><h2>转账计划与执行日志</h2><p>展示每一笔金额、执行状态、交易 Hash 或失败原因。</p></div><span>Log</span></div><div class="table-wrap"><table><thead><tr><th>#</th><th>接收地址</th><th>转账数量</th><th>状态</th><th>交易 Hash / 错误</th></tr></thead><tbody id="planBody"><tr><td colspan="5" class="empty">请先生成转账预览</td></tr></tbody></table></div></section>
+      </main>
+    </section>
+
+    <section id="walletPage" class="page-panel">
+      <section class="overview"><div class="metric-card"><span>生成状态</span><strong id="walletGenerateStatus">待生成</strong></div><div class="metric-card"><span>生成数量</span><strong id="walletGenerateTotal">0</strong></div><div class="metric-card"><span>钱包类型</span><strong>EVM</strong></div><div class="metric-card"><span>保存方式</span><strong>手动复制</strong></div></section>
+      <section class="card wide"><div class="card-title"><div><h2>钱包生成</h2><p>一键生成 EVM 钱包地址和私钥。生成结果只在当前页面展示。</p></div><span>Wallet</span></div>
+        <div class="wallet-generate-bar"><label class="field compact-field"><span>生成数量</span><input id="walletGenerateCount" type="number" min="1" max="200" step="1" value="10" /></label><div class="actions wallet-actions"><button id="generateWalletBtn" type="button">一键生成钱包</button><button id="copyWalletAddressBtn" class="secondary" type="button" disabled>复制地址列表</button><button id="copyWalletFullBtn" class="ghost" type="button" disabled>复制完整信息</button><button id="clearWalletGeneratedBtn" class="ghost" type="button" disabled>清空</button></div></div>
+        <div class="wallet-warning"><strong>重要：</strong>私钥只展示在当前页面，请复制后离线保存。</div>
+        <div class="table-wrap wallet-table-wrap"><table><thead><tr><th>#</th><th>钱包地址</th><th>私钥</th></tr></thead><tbody id="generatedWalletBody"><tr><td colspan="3" class="empty">暂无生成的钱包</td></tr></tbody></table></div>
+      </section>
+    </section>
+
+    <section id="tradePage" class="page-panel">
+      <section class="overview"><div class="metric-card"><span>交易模式</span><strong id="tradeModeMetric">买入</strong></div><div class="metric-card"><span>钱包数量</span><strong id="tradeWalletCountMetric">0</strong></div><div class="metric-card"><span>交易状态</span><strong id="tradeStatusMetric">待配置</strong></div><div class="metric-card"><span>DEX 类型</span><strong>V2 Router</strong></div></section>
+      <main class="layout">
+        <section class="card"><div class="card-title"><div><h2>交易基础配置</h2><p>配置 RPC、Router、Token。适用于 PancakeSwap V2 / Uniswap V2 类 Router。</p></div><span>Trade 01</span></div>
+          <label class="field"><span>RPC URL</span><input id="tradeRpcUrl" placeholder="例如：https://bsc-dataseed.binance.org/" /></label>
+          <label class="field"><span>Router 合约地址</span><input id="tradeRouterAddress" placeholder="例如 PancakeSwap V2 Router 地址" /></label>
+          <label class="field"><span>买入 / 卖出的 Token 合约地址</span><input id="tradeTokenAddress" placeholder="0x..." /></label>
+          <div class="actions"><button id="loadTradeTokenBtn" type="button">读取 Token / Router 信息</button></div>
+          <div class="result-box" id="tradeTokenInfo"><div class="muted">读取后显示 Token 信息，以及 Router 的 WETH/WBNB 地址。</div></div>
+        </section>
+        <section class="card"><div class="card-title"><div><h2>买卖规则</h2><p>买入使用原生币购买 Token；卖出使用 Token 换回原生币。</p></div><span>Trade 02</span></div>
+          <div class="field"><span>交易方向</span><div class="mode-tabs">
+            <label class="mode-tab active" id="buyTradeTab"><input type="radio" name="tradeMode" value="buy" checked /><div><strong>买入 Token</strong><small>每个钱包使用原生币买入</small></div></label>
+            <label class="mode-tab" id="sellTradeTab"><input type="radio" name="tradeMode" value="sell" /><div><strong>卖出 Token</strong><small>每个钱包卖出指定 Token</small></div></label>
+          </div></div>
+          <label class="field" id="buyAmountPanel"><span>每个钱包买入金额，原生币</span><input id="tradeBuyNativeAmount" type="number" min="0" step="0.000000000000000001" placeholder="例如：0.01" /></label>
+          <div class="field hidden" id="sellAmountPanel"><span>卖出 Token 数量</span><div class="sell-all-box"><label class="checkbox-line"><input id="tradeSellAllPercent" type="checkbox" /><strong>卖出全部 100%</strong><small>每个钱包自动读取自己的 Token 余额并全部卖出</small></label><input id="tradeSellTokenAmount" type="number" min="0" step="0.000000000000000001" placeholder="未勾选 100% 时，填写每个钱包固定卖出数量，例如：1000" /></div></div>
+          <div class="grid-2"><label class="field"><span>滑点百分比</span><input id="tradeSlippage" type="number" min="0" step="0.1" value="10" /></label><label class="field"><span>交易间隔秒数</span><input id="tradeDelaySeconds" type="number" min="0" step="0.1" value="1.5" /></label></div>
+          <div class="grid-2"><label class="field"><span>交易过期分钟</span><input id="tradeDeadlineMinutes" type="number" min="1" step="1" value="20" /></label><label class="field"><span>授权模式</span><input value="卖出时自动 approve" disabled /></label></div>
+        </section>
+        <section class="card wide"><div class="card-title"><div><h2>多钱包私钥</h2><p>一行一个私钥。页面仅在浏览器本地使用私钥。</p></div><span>Wallets</span></div>
+          <label class="field"><span>交易钱包私钥列表</span><textarea id="tradePrivateKeys" rows="8" placeholder="0xabc...&#10;0xdef..."></textarea></label>
+          <div class="actions split-actions"><div><button id="previewTradeBtn" type="button">生成买卖预览</button><button id="executeTradeBtn" class="danger" type="button" disabled>执行一键买卖</button><button id="stopTradeBtn" class="secondary" type="button" disabled>停止</button></div><div class="summary-chip" id="tradeSummaryText">暂无交易计划</div></div>
+          <div class="warning"><strong>风险提醒：</strong>一键买卖属于真实链上交易。请先用测试网或小额钱包验证。</div>
+        </section>
+        <section class="card wide"><div class="card-title"><div><h2>买卖计划与执行日志</h2><p>展示每个钱包的买入 / 卖出计划、状态、交易 Hash 或错误。</p></div><span>Trade Log</span></div><div class="table-wrap"><table><thead><tr><th>#</th><th>钱包地址</th><th>方向</th><th>数量</th><th>状态</th><th>交易 Hash / 错误</th></tr></thead><tbody id="tradePlanBody"><tr><td colspan="6" class="empty">请先生成买卖预览</td></tr></tbody></table></div></section>
+      </main>
+    </section>
+
+    <section id="collectPage" class="page-panel">
+      <section class="overview"><div class="metric-card"><span>Token 状态</span><strong id="collectTokenMetric">未读取</strong></div><div class="metric-card"><span>钱包数量</span><strong id="collectWalletCountMetric">0</strong></div><div class="metric-card"><span>可归集钱包</span><strong id="collectReadyCountMetric">0</strong></div><div class="metric-card"><span>归集状态</span><strong id="collectStatusMetric">待配置</strong></div></section>
+      <main class="layout">
+        <section class="card"><div class="card-title"><div><h2>归集基础配置</h2><p>配置 RPC、Token 与接收地址。归集通过 ERC20 transfer 执行。</p></div><span>Collect 01</span></div>
+          <label class="field"><span>RPC URL</span><input id="collectRpcUrl" placeholder="例如：https://bsc-dataseed.binance.org/" /></label>
+          <label class="field"><span>归集 Token 合约地址</span><input id="collectTokenAddress" placeholder="0x..." /></label>
+          <label class="field"><span>归集接收地址</span><input id="collectToAddress" placeholder="0x..." /></label>
+          <div class="actions"><button id="loadCollectTokenBtn" type="button">读取 Token 信息</button></div>
+          <div class="result-box" id="collectTokenInfo"><div class="muted">读取后显示 Token 名称、符号和精度。</div></div>
+        </section>
+        <section class="card"><div class="card-title"><div><h2>归集规则</h2><p>每个私钥钱包自动读取 Token 余额，并把全部余额转到归集地址。</p></div><span>Collect 02</span></div>
+          <label class="field"><span>每笔间隔秒数</span><input id="collectDelaySeconds" type="number" min="0" step="0.1" value="1.2" /></label>
+          <div class="warning"><strong>注意：</strong>每个归集钱包必须有足够原生币支付 gas。Token 如果带转账税，实际到账可能小于预览余额。</div>
+        </section>
+        <section class="card wide"><div class="card-title"><div><h2>归集钱包私钥</h2><p>一行一个私钥。页面仅在浏览器本地使用私钥。</p></div><span>Wallets</span></div>
+          <label class="field"><span>待归集钱包私钥列表</span><textarea id="collectPrivateKeys" rows="8" placeholder="0xabc...&#10;0xdef..."></textarea></label>
+          <div class="actions split-actions"><div><button id="previewCollectBtn" type="button">生成归集预览</button><button id="executeCollectBtn" class="danger" type="button" disabled>执行一键归集</button><button id="stopCollectBtn" class="secondary" type="button" disabled>停止</button></div><div class="summary-chip" id="collectSummaryText">暂无归集计划</div></div>
+          <div class="warning"><strong>安全提醒：</strong>归集会真实转出每个私钥钱包中的该 Token，请先小额测试。</div>
+        </section>
+        <section class="card wide"><div class="card-title"><div><h2>归集计划与执行日志</h2><p>展示每个钱包的 Token 余额、原生币余额、状态和交易 Hash。</p></div><span>Collect Log</span></div><div class="table-wrap"><table><thead><tr><th>#</th><th>钱包地址</th><th>Token 余额</th><th>原生币余额</th><th>状态</th><th>交易 Hash / 错误</th></tr></thead><tbody id="collectPlanBody"><tr><td colspan="6" class="empty">请先生成归集预览</td></tr></tbody></table></div></section>
+      </main>
+    </section>
+  </section>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/ethers@6.13.4/dist/ethers.umd.min.js"></script><script src="./app.js"></script></body></html>
