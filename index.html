@@ -36,12 +36,8 @@
           <div class="result-box" id="walletInfo"><div class="muted">验证后显示钱包地址、链 ID、原生币余额。</div></div>
         </section>
         <section class="card">
-          <div class="card-title"><div><h2>资产与转账规则</h2><p>支持原生币或 ERC20/BEP20 Token，选择固定转账或随机区间转账。</p></div><span>Step 02</span></div>
-          <div class="field"><span>转账资产</span><div class="mode-tabs">
-            <label class="mode-tab" id="nativeAssetTab"><input type="radio" name="transferAssetType" value="native" /><div><strong>原生币</strong><small>BNB / ETH 等手续费币</small></div></label>
-            <label class="mode-tab active" id="tokenAssetTab"><input type="radio" name="transferAssetType" value="token" checked /><div><strong>Token</strong><small>ERC20 / BEP20 合约资产</small></div></label>
-          </div></div>
-          <label class="field" id="tokenAddressPanel"><span>转账 Token 合约地址</span><input id="tokenAddress" placeholder="0x..." /></label>
+          <div class="card-title"><div><h2>资产与转账规则</h2><p>填写 Token 合约或选择主币，并配置固定转账或随机区间转账。</p></div><span>Step 02</span></div>
+          <div class="field"><span>转账 Token 合约地址</span><div class="asset-option-row"><input id="tokenAddress" placeholder="0x..." /><label class="inline-option-check"><input id="transferNativeAsset" type="checkbox" /><strong>主币</strong></label></div></div>
           <div class="field"><span>转账模式</span><div class="mode-tabs">
             <label class="mode-tab active" id="randomModeTab"><input type="radio" name="transferMode" value="random" checked /><div><strong>随机转账</strong><small>每个地址随机一个数量</small></div></label>
             <label class="mode-tab" id="fixedModeTab"><input type="radio" name="transferMode" value="fixed" /><div><strong>固定转账</strong><small>每个地址转同样数量</small></div></label>
@@ -87,9 +83,10 @@
             <label class="mode-tab" id="sellTradeTab"><input type="radio" name="tradeMode" value="sell" /><div><strong>卖出 Token</strong><small>每个钱包卖出指定 Token</small></div></label>
           </div></div>
           <label class="field" id="buyAmountPanel"><span>每个钱包买入金额，原生币</span><input id="tradeBuyNativeAmount" type="number" min="0" step="0.000000000000000001" placeholder="例如：0.01" /></label>
-          <div class="field hidden" id="sellAmountPanel"><span>卖出 Token 数量</span><div class="sell-all-box"><label class="checkbox-line"><input id="tradeSellAllPercent" type="checkbox" /><strong>卖出全部 100%</strong><small>每个钱包自动读取自己的 Token 余额并全部卖出</small></label><input id="tradeSellTokenAmount" type="number" min="0" step="0.000000000000000001" placeholder="未勾选 100% 时，填写每个钱包固定卖出数量，例如：1000" /></div></div>
-          <div class="grid-2"><label class="field"><span>滑点百分比</span><input id="tradeSlippage" type="number" min="0" step="0.1" value="10" /></label><label class="field"><span>交易间隔秒数</span><input id="tradeDelaySeconds" type="number" min="0" step="0.1" value="1.5" /></label></div>
-          <div class="grid-2"><label class="field"><span>交易过期分钟</span><input id="tradeDeadlineMinutes" type="number" min="1" step="1" value="20" /></label><label class="field"><span>授权模式</span><input value="卖出时自动 approve" disabled /></label></div>
+          <div class="field hidden" id="sellAmountPanel"><span>卖出 Token 数量</span><div class="asset-option-row"><input id="tradeSellTokenAmount" type="number" min="0" step="0.000000000000000001" placeholder="每个钱包固定卖出数量，例如：1000" /><label class="inline-option-check"><input id="tradeSellAllPercent" type="checkbox" /><strong>卖出 100%</strong></label></div></div>
+          <div class="grid-2"><label class="field"><span>滑点百分比</span><input id="tradeSlippage" type="number" min="0" step="0.1" value="10" /></label><label class="field"><span>提交间隔秒数</span><input id="tradeDelaySeconds" type="number" min="0" step="0.1" value="0.2" /></label></div>
+          <div class="grid-2"><label class="field"><span>交易过期分钟</span><input id="tradeDeadlineMinutes" type="number" min="1" step="1" value="20" /></label><label class="field"><span>并发钱包数</span><input id="tradeConcurrency" type="number" min="1" max="20" step="1" value="5" /></label></div>
+          <div class="result-box"><div><strong>快速执行：</strong>最多同时处理指定数量的钱包。卖出时如果授权不足，会先等待该钱包 approve 成功再提交卖出。</div><div class="muted">并发过高可能触发公共 RPC 限流；停止仅阻止尚未提交的交易。</div></div>
         </section>
         <section class="card wide"><div class="card-title"><div><h2>多钱包私钥</h2><p>一行一个私钥。页面仅在浏览器本地使用私钥。</p></div><span>Wallets</span></div>
           <label class="field"><span>交易钱包私钥列表</span><textarea id="tradePrivateKeys" rows="8" placeholder="0xabc...&#10;0xdef..."></textarea></label>
@@ -101,25 +98,26 @@
     </section>
 
     <section id="collectPage" class="page-panel">
-      <section class="overview"><div class="metric-card"><span>Token 状态</span><strong id="collectTokenMetric">未读取</strong></div><div class="metric-card"><span>钱包数量</span><strong id="collectWalletCountMetric">0</strong></div><div class="metric-card"><span>可归集钱包</span><strong id="collectReadyCountMetric">0</strong></div><div class="metric-card"><span>归集状态</span><strong id="collectStatusMetric">待配置</strong></div></section>
+      <section class="overview"><div class="metric-card"><span>资产状态</span><strong id="collectTokenMetric">未读取</strong></div><div class="metric-card"><span>钱包数量</span><strong id="collectWalletCountMetric">0</strong></div><div class="metric-card"><span>可归集钱包</span><strong id="collectReadyCountMetric">0</strong></div><div class="metric-card"><span>归集状态</span><strong id="collectStatusMetric">待配置</strong></div></section>
       <main class="layout">
-        <section class="card"><div class="card-title"><div><h2>归集基础配置</h2><p>配置 RPC、Token 与接收地址。归集通过 ERC20 transfer 执行。</p></div><span>Collect 01</span></div>
+        <section class="card"><div class="card-title"><div><h2>归集基础配置</h2><p>配置 RPC、归集资产与接收地址。</p></div><span>Collect 01</span></div>
           <label class="field"><span>RPC URL</span><input id="collectRpcUrl" placeholder="例如：https://bsc-dataseed.binance.org/" /></label>
-          <label class="field"><span>归集 Token 合约地址</span><input id="collectTokenAddress" placeholder="0x..." /></label>
+          <div class="field"><span>归集 Token 合约地址</span><div class="collect-asset-row"><input id="collectTokenAddress" placeholder="0x..." /><label class="native-asset-check"><input id="collectNativeAsset" type="checkbox" /><strong>主币</strong></label></div></div>
           <label class="field"><span>归集接收地址</span><input id="collectToAddress" placeholder="0x..." /></label>
           <div class="actions"><button id="loadCollectTokenBtn" type="button">读取 Token 信息</button></div>
           <div class="result-box" id="collectTokenInfo"><div class="muted">读取后显示 Token 名称、符号和精度。</div></div>
         </section>
-        <section class="card"><div class="card-title"><div><h2>归集规则</h2><p>每个私钥钱包自动读取 Token 余额，并把全部余额转到归集地址。</p></div><span>Collect 02</span></div>
-          <label class="field"><span>每笔间隔秒数</span><input id="collectDelaySeconds" type="number" min="0" step="0.1" value="1.2" /></label>
-          <div class="warning"><strong>注意：</strong>每个归集钱包必须有足够原生币支付 gas。Token 如果带转账税，实际到账可能小于预览余额。</div>
+        <section class="card"><div class="card-title"><div><h2>归集规则</h2><p id="collectRuleText">每个私钥钱包自动读取 Token 余额，并把全部余额转到归集地址。</p></div><span>Collect 02</span></div>
+          <div class="grid-2"><label class="field"><span>提交间隔秒数</span><input id="collectDelaySeconds" type="number" min="0" step="0.1" value="0.2" /></label><label class="field"><span>并发钱包数</span><input id="collectConcurrency" type="number" min="1" max="20" step="1" value="5" /></label></div>
+          <div class="result-box"><div><strong>快速归集：</strong>最多同时处理指定数量的钱包，交易广播后统一等待确认。</div><div class="muted">并发过高可能触发公共 RPC 限流；停止仅阻止尚未提交的交易。</div></div>
+          <div class="warning" id="collectRuleWarning"><strong>注意：</strong>每个归集钱包必须有足够原生币支付 gas。Token 如果带转账税，实际到账可能小于预览余额。</div>
         </section>
         <section class="card wide"><div class="card-title"><div><h2>归集钱包私钥</h2><p>一行一个私钥。页面仅在浏览器本地使用私钥。</p></div><span>Wallets</span></div>
           <label class="field"><span>待归集钱包私钥列表</span><textarea id="collectPrivateKeys" rows="8" placeholder="0xabc...&#10;0xdef..."></textarea></label>
           <div class="actions split-actions"><div><button id="previewCollectBtn" type="button">生成归集预览</button><button id="executeCollectBtn" class="danger" type="button" disabled>执行一键归集</button><button id="stopCollectBtn" class="secondary" type="button" disabled>停止</button></div><div class="summary-chip" id="collectSummaryText">暂无归集计划</div></div>
-          <div class="warning"><strong>安全提醒：</strong>归集会真实转出每个私钥钱包中的该 Token，请先小额测试。</div>
+          <div class="warning" id="collectSafetyWarning"><strong>安全提醒：</strong>归集会真实转出每个私钥钱包中的该 Token，请先小额测试。</div>
         </section>
-        <section class="card wide"><div class="card-title"><div><h2>归集计划与执行日志</h2><p>展示每个钱包的 Token 余额、原生币余额、状态和交易 Hash。</p></div><span>Collect Log</span></div><div class="table-wrap"><table><thead><tr><th>#</th><th>钱包地址</th><th>Token 余额</th><th>原生币余额</th><th>状态</th><th>交易 Hash / 错误</th></tr></thead><tbody id="collectPlanBody"><tr><td colspan="6" class="empty">请先生成归集预览</td></tr></tbody></table></div></section>
+        <section class="card wide"><div class="card-title"><div><h2>归集计划与执行日志</h2><p>展示每个钱包的可归集数量、原生币余额、状态和交易 Hash。</p></div><span>Collect Log</span></div><div class="table-wrap"><table><thead><tr><th>#</th><th>钱包地址</th><th>可归集数量</th><th>原生币余额</th><th>状态</th><th>交易 Hash / 错误</th></tr></thead><tbody id="collectPlanBody"><tr><td colspan="6" class="empty">请先生成归集预览</td></tr></tbody></table></div></section>
       </main>
     </section>
   </section>
